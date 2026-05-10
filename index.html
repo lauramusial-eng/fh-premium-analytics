@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="FashionHero Premium Analytics — benchmarki konwersji, ceny konkurencji i alerty popytu.">
+  <title>FashionHero · Analityka</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Inter (body) + Plus Jakarta Sans (display/headings) — design system fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ══════════════════════════════════════════════════════════════
+       DESIGN SYSTEM TOKENS
+       Source: https://fashionhero.aiproductheroes.pl/
+       HSL bare channels — enables opacity modifiers.
+       ══════════════════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      /* ── Surfaces ──────────────────────────────────────────── */
+      --bg:         hsl(42, 20%, 91%);   /* warm sand canvas  #ECE9E2 */
+      --bg-card:    hsl(0,  0%, 100%);   /* card surface      #FFFFFF */
+      --bg-alt:     hsl(42, 20%, 95%);   /* muted cream       #F5F4F1 */
+      --bg-dark:    hsl(0,  0%, 13%);    /* near-black        #212121 — CTA block */
+
+      /* ── Text ──────────────────────────────────────────────── */
+      --text:       hsl(0,  0%, 13%);    /* foreground        #212121 */
+      --text-muted: hsl(0,  0%, 42%);    /* muted             #6B6B6B */
+
+      /* ── Structural ────────────────────────────────────────── */
+      --border:     hsl(0,  0%, 80%);    /* border            #CDCDCD */
+
+      /* ── Brand action — near-black is the FashionHero CTA ─── */
+      --accent:         hsl(0,  0%, 13%);   /* #212121 */
+      --accent-hover:   hsl(0,  0%,  7%);   /* #111 */
+
+      /* ── Accent warm terracotta — one brand colour, on dark ─ */
+      --brand:          hsl(22, 72%, 48%);  /* editorial amber/terracotta */
+      --brand-hover:    hsl(22, 72%, 38%);
+
+      /* ── Semantic: success / danger ────────────────────────── */
+      --up:         hsl(142, 60%, 32%);
+      --up-bg:      hsl(142, 60%, 96%);
+      --up-border:  hsl(142, 45%, 76%);
+      --down:       hsl(0,   83%, 46%);
+      --down-bg:    hsl(0,   83%, 96%);
+      --down-border:hsl(0,   60%, 82%);
+
+      /* ── Typography ────────────────────────────────────────── */
+      --font:         'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-display: 'Plus Jakarta Sans', 'Inter', sans-serif;
+
+      /* ── Radius ────────────────────────────────────────────── */
+      --radius:     6px;      /* inputs, chips, small cards */
+      --radius-md:  8px;      /* modal, large cards */
+      --radius-pill:9999px;   /* ALL CTA buttons — signature FashionHero shape */
+
+      /* ── Layout ────────────────────────────────────────────── */
+      --header-h:   52px;
+      --tabs-h:     40px;
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       BASE
+       ══════════════════════════════════════════════════════════════ */
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ── Header ─────────────────────────────────────────────────── */
+    .header {
+      height: var(--header-h);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-card);        /* white — card surface lifts above sand */
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+
+    /* Logo — italic wordmark, matches FashionHero reference treatment */
+    .logo {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 700;
+      font-style: italic;
+      letter-spacing: -0.4px;
+      text-decoration: none;
+      color: var(--text);
+      flex-shrink: 0;
+      margin-right: 28px;
+    }
+    .logo-accent { color: var(--brand); }   /* terracotta on the 'Hero' word */
+
+    /* Nav — uppercase small caps, wide tracking (FashionHero nav pattern) */
+    .seller-nav {
+      display: flex;
+      align-items: stretch;
+      flex: 1;
+      height: 100%;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .seller-nav::-webkit-scrollbar { display: none; }
+    .nav-tab {
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-decoration: none;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: color 0.12s;
+    }
+    .nav-tab:hover { color: var(--text); }
+    .nav-tab.active {
+      color: var(--text);
+      border-bottom-color: var(--text);   /* near-black underline, confident */
+      font-weight: 700;
+    }
+
+    /* Account */
+    .account-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-left: 16px;
+      flex-shrink: 0;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      cursor: default;
+    }
+    .account-avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text);
+      flex-shrink: 0;
+    }
+
+    /* ── Page wrapper ────────────────────────────────────────────── */
+    .page-wrap {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ── Dashboard grid ──────────────────────────────────────────── */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+    @media (min-width: 640px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr 340px;
+        gap: 32px;
+        align-items: start;
+      }
+    }
+
+    /* ── Section tabs nav ────────────────────────────────────────── */
+    .section-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      position: sticky;
+      top: var(--header-h);
+      z-index: 90;
+      height: var(--tabs-h);
+    }
+    .stab {
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-decoration: none;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: color 0.1s;
+    }
+    .stab:hover { color: var(--text); }
+    .stab.active {
+      color: var(--text);
+      border-bottom-color: var(--text);
+    }
+
+    /* ── Sections ────────────────────────────────────────────────── */
+    .view-section {
+      padding: 24px 0 20px;
+      border-bottom: 1px solid var(--border);
+      scroll-margin-top: calc(var(--header-h) + var(--tabs-h) + 8px);
+    }
+    .view-section:last-child { border-bottom: none; }
+
+    /* Overline — eyebrow label above heading */
+    .section-tag {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    /* Section heading — display font, tight tracking */
+    .view-section h2 {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      margin-bottom: 3px;
+      line-height: 1.25;
+    }
+    .view-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    /* ── Metrics grid ────────────────────────────────────────────── */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .metric-card {
+      background: var(--bg-card);        /* white card lifts from sand bg */
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+    }
+    .metric-big {
+      font-family: var(--font-display);  /* bold display number */
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .metric-label { font-size: 11px; color: var(--text-muted); margin-bottom: 3px; }
+    .metric-delta       { font-size: 12px; font-weight: 600; }
+    .metric-delta.up    { color: var(--up); }
+    .metric-delta.down  { color: var(--down); }
+    .metric-delta.muted { color: var(--text-muted); }
+
+    /* ── Insight box ─────────────────────────────────────────────── */
+    .insight-box {
+      border-radius: var(--radius);
+      padding: 10px 13px;
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+    .insight-box.positive { background: var(--up-bg);   border: 1px solid var(--up-border);   color: hsl(142, 55%, 22%); }
+    .insight-box.negative { background: var(--down-bg); border: 1px solid var(--down-border); color: hsl(0, 65%, 32%); }
+
+    /* ── Card / table ────────────────────────────────────────────── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+    .price-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .price-table th {
+      text-align: left;
+      padding: 0 0 7px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .price-table th:last-child,
+    .price-table td:last-child { text-align: right; }
+    .price-table td {
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .price-table tr:last-child td { border-bottom: none; }
+    .row-own td { background: hsl(42, 20%, 91%); font-weight: 600; }
+    .row-own td:first-child { border-radius: 4px 0 0 4px; padding-left: 8px; }
+    .row-own td:last-child  { border-radius: 0 4px 4px 0; padding-right: 8px; }
+    .delta {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: var(--radius-pill);  /* pill delta badge */
+    }
+    .delta.neg { background: var(--down-bg); color: var(--down); }
+    .delta.pos { background: var(--up-bg);   color: var(--up); }
+    .delta.neu { background: var(--bg-alt);  color: var(--text-muted); border: 1px solid var(--border); }
+
+    /* ── Demand list ─────────────────────────────────────────────── */
+    .demand-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+    .demand-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      gap: 8px;
+    }
+    .demand-query  { font-size: 13px; font-weight: 500; }
+    .demand-period { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .demand-change { font-size: 13px; font-weight: 700; white-space: nowrap; min-width: 54px; text-align: right; }
+    .demand-change.up   { color: var(--up); }
+    .demand-change.down { color: var(--down); }
+
+    /* ── CTA column — sticky ─────────────────────────────────────── */
+    .cta-col {
+      position: sticky;
+      top: calc(var(--header-h) + var(--tabs-h) + 12px);
+      align-self: start;
+    }
+    @media (max-width: 639px) { .cta-col { display: none; } }
+
+    .cta-mobile { display: none; }
+    @media (max-width: 639px) {
+      .cta-mobile { display: block; padding: 20px 0 4px; }
+    }
+
+    /* ── CTA block — near-black canvas (FashionHero primary action) ─ */
+    .cta-block {
+      background: var(--bg-dark);
+      border-radius: var(--radius-md);
+      padding: 24px;
+    }
+
+    .cta-title {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 18px;
+    }
+    .benefit-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .benefit-item {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .benefit-item:last-child  { border-bottom: none; padding-bottom: 0; }
+    .benefit-item:first-child { padding-top: 0; }
+    .benefit-num {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1;
+      color: rgba(255,255,255,0.10);
+      flex-shrink: 0;
+      width: 32px;
+      letter-spacing: -1px;
+      margin-top: 1px;
+    }
+    .benefit-body { flex: 1; }
+    .benefit-lead {
+      font-size: 13px;
+      font-weight: 600;
+      color: hsl(42, 15%, 94%);   /* warm off-white on dark */
+      line-height: 1.35;
+      margin-bottom: 3px;
+    }
+    .benefit-sub {
+      font-size: 12px;
+      color: rgba(255,255,255,0.42);
+      line-height: 1.5;
+    }
+
+    /* Price display — display font, bold */
+    .cta-price {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.8px;
+      margin-bottom: 5px;
+      line-height: 1;
+    }
+    .cta-price span { font-family: var(--font); font-size: 14px; font-weight: 400; color: rgba(255,255,255,0.40); letter-spacing: 0; }
+
+    /* Discount line — warm amber (design system warning/brand tone) */
+    .cta-discount {
+      font-size: 11px;
+      color: hsl(38, 92%, 65%);   /* warm amber highlight on dark */
+      margin-bottom: 10px;
+      line-height: 1.55;
+    }
+    .cta-avail { font-size: 11px; color: rgba(255,255,255,0.35); margin-bottom: 14px; }
+
+    /* ── Primary button — pill shape (FashionHero signature CTA) ──── */
+    .btn-primary {
+      display: block;
+      width: 100%;
+      padding: 13px 24px;
+      background: var(--brand);          /* terracotta amber — visible on dark */
+      color: #fff;
+      font-family: var(--font);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      text-align: center;
+      border: none;
+      border-radius: var(--radius-pill); /* pill — signature FashionHero shape */
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+    }
+    .btn-primary:hover    { background: var(--brand-hover); }
+    .btn-primary:active   { opacity: 0.88; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Modal ───────────────────────────────────────────────────── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.50);
+      z-index: 200;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--bg-card);
+      border-radius: 14px 14px 0 0;
+      padding: 20px 20px 40px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 92vh;
+      overflow-y: auto;
+    }
+    .modal-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .modal-title {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+    .btn-close {
+      background: none; border: none; font-size: 22px; line-height: 1;
+      color: var(--text-muted); cursor: pointer; padding: 2px 4px; font-family: var(--font);
+      transition: color 0.1s;
+    }
+    .btn-close:hover { color: var(--text); }
+    .pricing-summary {
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 11px 13px;
+      margin-bottom: 14px;
+    }
+    .ps-row { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; }
+    .ps-row span { color: var(--text-muted); }
+    .ps-row.total { border-top: 1px solid var(--border); margin-top: 5px; padding-top: 8px; }
+    .ps-row.total strong { font-size: 14px; }
+    .form-group { margin-bottom: 13px; }
+    .form-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 6px; color: var(--text-muted); }
+    .form-label .opt { font-weight: 400; color: var(--text-muted); text-transform: none; letter-spacing: 0; }
+    .form-input {
+      width: 100%; padding: 10px 12px;
+      border: 1px solid var(--border); border-radius: var(--radius);
+      font-size: 15px; color: var(--text); background: var(--bg-card);
+      outline: none; font-family: var(--font);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .form-input:focus { border-color: var(--text); box-shadow: 0 0 0 2px rgba(33,33,33,0.10); }
+    #card-element {
+      padding: 10px 12px; border: 1px solid var(--border);
+      border-radius: var(--radius); background: var(--bg-card);
+    }
+    #card-element.StripeElement--focus { border-color: var(--text); box-shadow: 0 0 0 2px rgba(33,33,33,0.10); }
+    .form-helper { font-size: 11px; color: var(--text-muted); margin-top: 5px; line-height: 1.55; }
+    .form-error  { font-size: 12px; color: var(--down); margin-top: 4px; }
+    .disclaimer  { font-size: 11px; color: var(--text-muted); margin-top: 11px; line-height: 1.65; }
+
+    /* ── Success screen ──────────────────────────────────────────── */
+    #success-screen { display: none; text-align: center; padding: 8px 0 4px; }
+    #success-screen.show { display: block; }
+    .success-mark {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 50px; height: 50px; background: var(--up-bg);
+      border: 2px solid var(--up-border); border-radius: 50%;
+      font-size: 20px; color: var(--up); margin-bottom: 12px;
+    }
+    #success-screen h2 {
+      font-family: var(--font-display);
+      font-size: 17px; font-weight: 700; margin-bottom: 8px;
+    }
+    #success-screen p  { font-size: 13px; color: var(--text-muted); margin-bottom: 18px; line-height: 1.65; }
+
+    /* ── Footer ──────────────────────────────────────────────────── */
+    footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    /* ── Row blur / Premium lock overlay ────────────────────────── */
+    .table-wrap { position: relative; }
+    .row-locked td { filter: blur(4px); user-select: none; pointer-events: none; }
+    .table-lock-overlay {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 140px;
+      background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.92) 35%, rgba(255,255,255,1) 65%);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 14px;
+      border-radius: 0 0 var(--radius) var(--radius);
+    }
+    .btn-unlock {
+      display: inline-block;
+      padding: 9px 20px;
+      background: var(--text);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      border: none;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn-unlock:hover { opacity: 0.85; }
+
+    /* ── Use-case callout — italic quote on dark CTA ─────────────── */
+    .use-case-box {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.55;
+      margin-bottom: 16px;
+      font-style: italic;
+    }
+
+    /* ── Views/ATC columns — hide on very small screens ─────────── */
+    .col-views, .col-atc { text-align: right; }
+    @media (max-width: 480px) {
+      .col-views, .col-atc { display: none; }
+    }
+
+    /* ── Mobile tweaks ───────────────────────────────────────────── */
+    @media (max-width: 375px) {
+      .header-inner { padding: 0 16px; }
+      .page-wrap    { padding: 0 16px; }
+      .view-section h2 { font-size: 15px; }
+      .metric-big   { font-size: 24px; }
+      .cta-price    { font-size: 19px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── Header ─────────────────────────────────────────────────── -->
+<header class="header">
+  <div class="header-inner">
+    <a class="logo" href="#">Fashion<span class="logo-accent">Hero</span></a>
+    <nav class="seller-nav" aria-label="Panel nawigacji">
+      <a href="#" class="nav-tab">Pulpit</a>
+      <a href="#" class="nav-tab">Produkty</a>
+      <a href="#" class="nav-tab">Zamówienia</a>
+      <a href="#" class="nav-tab active" aria-current="page">Analityka</a>
+      <a href="#" class="nav-tab">Wypłaty</a>
+    </nav>
+    <div class="account-btn" aria-label="Moje konto">
+      <div class="account-avatar" id="account-initials">JK</div>
+      <span>Moje konto</span>
+    </div>
+  </div>
+</header>
+
+<!-- ─── Dashboard ──────────────────────────────────────────────── -->
+<div class="page-wrap">
+  <div class="dashboard-grid">
+
+    <!-- ── Left: scrollable content ───────────────────────────── -->
+    <div>
+      <!-- Section tabbar -->
+      <nav class="section-tabs" aria-label="Przejdź do sekcji">
+        <a href="#view-benchmarks" class="stab active" data-section="view-benchmarks">01 Benchmarki</a>
+        <a href="#view-prices"     class="stab"        data-section="view-prices">02 Ceny</a>
+        <a href="#view-demand"     class="stab"        data-section="view-demand">03 Popyt</a>
+      </nav>
+
+      <!-- VIEW 1: Benchmarks -->
+      <section class="view-section" id="view-benchmarks">
+        <div class="section-tag">01 &mdash; Benchmarki kategorii</div>
+        <h2 id="bench-heading">Konwersja sprzedaży</h2>
+        <p class="view-desc">Twoje konto vs. średnia kategorii &mdash; ostatnie 30 dni</p>
+
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-big" id="bench-own-val">&mdash;</div>
+            <div class="metric-label">Twoja konwersja</div>
+            <div class="metric-delta" id="bench-own-delta"></div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-big" id="bench-avg-val" style="color:hsl(0,0%,75%);">&mdash;</div>
+            <div class="metric-label">Średnia kategorii</div>
+            <div class="metric-delta muted">benchmark</div>
+          </div>
+        </div>
+
+        <div class="insight-box" id="bench-insight"></div>
+      </section>
+
+      <!-- Mobile CTA — shown only on ≤639px, after section 1 -->
+      <div class="cta-mobile">
+        <div class="cta-block">
+          <p class="cta-title">Co dostajesz za 99 PLN/m</p>
+          <div class="benefit-list">
+            <div class="benefit-item">
+              <div class="benefit-num">01</div>
+              <div class="benefit-body">
+                <div class="benefit-lead">Benchmarki konwersji w czasie rzeczywistym</div>
+                <div class="benefit-sub">Twoja sprzedaż vs. średnia kategorii — bez 5h w Excelu tygodniowo.</div>
+              </div>
+            </div>
+            <div class="benefit-item">
+              <div class="benefit-num">02</div>
+              <div class="benefit-body">
+                <div class="benefit-lead">Ceny top 10 konkurentów &mdash; co dzień</div>
+                <div class="benefit-sub">Gdy nowy sprzedawca wchodzi do kategorii i obniża ceny &mdash; dostaje Pani/Pan alert w ciągu 24h, nie po tygodniu.</div>
+              </div>
+            </div>
+            <div class="benefit-item">
+              <div class="benefit-num">03</div>
+              <div class="benefit-body">
+                <div class="benefit-lead">Alerty popytu przed sezonem</div>
+                <div class="benefit-sub">Wiesz co zamówić do magazynu zanim trend się rozkręci — nie po fakcie.</div>
+              </div>
+            </div>
+          </div>
+          <div class="use-case-box">W marcu 3 sprzedawców w kategorii obniżyło ceny &mdash; czy dowiedział(a)by się Pani/Pan o tym w ciągu 24h?</div>
+          <div class="cta-price">99 PLN <span>/ miesiąc</span></div>
+          <div class="cta-discount">Pierwszych 30 sprzedawców: stawka 49,50 PLN/m zamiast 99 PLN &mdash; przez 12 miesięcy. Karta opcjonalna; opłata dopiero od startu Q3 2026.</div>
+          <div class="cta-avail">Start Q3 2026 &mdash; liczba miejsc ograniczona</div>
+          <div class="cta-avail">Rachunek wystawiamy dopiero po starcie usługi. E-mail potwierdzający zostanie wysłany po rejestracji.</div>
+          <button class="btn-primary" onclick="openModal()">Dołącz do waitlist &mdash; 99 PLN/m, start Q3 2026</button>
+        </div>
+      </div>
+
+      <!-- VIEW 2: Competitor prices -->
+      <section class="view-section" id="view-prices">
+        <div class="section-tag">02 &mdash; Ceny konkurencji</div>
+        <h2 id="prices-heading">Top 10 ofert w kategorii</h2>
+        <p class="view-desc" id="prices-desc"></p>
+
+        <div class="card table-wrap">
+          <table class="price-table" aria-label="Ceny konkurencji">
+            <thead>
+              <tr>
+                <th>Sprzedawca</th>
+                <th>Cena</th>
+                <th class="col-views">Wyśw.</th>
+                <th class="col-atc">Koszyk</th>
+                <th>Delta</th>
+              </tr>
+            </thead>
+            <tbody id="prices-tbody"></tbody>
+          </table>
+          <div class="table-lock-overlay">
+            <button class="btn-unlock" onclick="openModal()">Odblokuj Premium &mdash; 99 PLN/m</button>
+          </div>
+        </div>
+
+        <div class="insight-box" id="prices-insight"></div>
+      </section>
+
+      <!-- VIEW 3: Demand alerts -->
+      <section class="view-section" id="view-demand">
+        <div class="section-tag">03 &mdash; Alerty popytu</div>
+        <h2 id="demand-heading">Trendy wyszukiwań (MoM)</h2>
+        <p class="view-desc">Zmiana liczby zapytań w kategorii, miesiąc do miesiąca</p>
+
+        <div class="demand-list" id="demand-list"></div>
+
+        <div class="insight-box" id="demand-insight"></div>
+      </section>
+    </div>
+
+    <!-- ── Right: sticky CTA ───────────────────────────────────── -->
+    <div class="cta-col">
+      <div class="cta-block">
+        <p class="cta-title">Co dostajesz za 99 PLN/m</p>
+        <div class="benefit-list">
+          <div class="benefit-item">
+            <div class="benefit-num">01</div>
+            <div class="benefit-body">
+              <div class="benefit-lead">Benchmarki konwersji w czasie rzeczywistym</div>
+              <div class="benefit-sub">Twoja sprzedaż vs. średnia kategorii — bez 5h w Excelu tygodniowo.</div>
+            </div>
+          </div>
+          <div class="benefit-item">
+            <div class="benefit-num">02</div>
+            <div class="benefit-body">
+              <div class="benefit-lead">Ceny top 10 konkurentów &mdash; co dzień</div>
+              <div class="benefit-sub">Gdy nowy sprzedawca wchodzi do kategorii i obniża ceny &mdash; dostaje Pani/Pan alert w ciągu 24h, nie po tygodniu.</div>
+            </div>
+          </div>
+          <div class="benefit-item">
+            <div class="benefit-num">03</div>
+            <div class="benefit-body">
+              <div class="benefit-lead">Alerty popytu przed sezonem</div>
+              <div class="benefit-sub">Wiesz co zamówić do magazynu zanim trend się rozkręci — nie po fakcie.</div>
+            </div>
+          </div>
+        </div>
+        <div class="use-case-box">W marcu 3 sprzedawców w kategorii obniżyło ceny &mdash; czy dowiedział(a)by się Pani/Pan o tym w ciągu 24h?</div>
+        <div class="cta-price">99 PLN <span>/ miesiąc</span></div>
+        <div class="cta-discount">Pierwszych 30 sprzedawców: stawka 49,50 PLN/m zamiast 99 PLN &mdash; przez 12 miesięcy. Karta opcjonalna; opłata dopiero od startu Q3 2026.</div>
+        <div class="cta-avail">Start Q3 2026 &mdash; liczba miejsc ograniczona</div>
+        <div class="cta-avail">Rachunek wystawiamy dopiero po starcie usługi. E-mail potwierdzający zostanie wysłany po rejestracji.</div>
+        <button class="btn-primary" onclick="openModal()">Dołącz do waitlist &mdash; 99 PLN/m, start Q3 2026</button>
+      </div>
+    </div>
+
+  </div><!-- /dashboard-grid -->
+</div><!-- /page-wrap -->
+
+<!-- ─── Footer ─────────────────────────────────────────────────── -->
+<footer>
+  FashionHero &middot; Panel sprzedawcy &middot; v0.1 demo
+</footer>
+
+<!-- ─── Waitlist modal ─────────────────────────────────────────── -->
+<div class="modal-overlay" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"
+     onclick="handleOverlayClick(event)">
+  <div class="modal">
+
+    <div id="form-screen">
+      <div class="modal-hdr">
+        <div class="modal-title" id="modal-title">Dołącz do waitlist</div>
+        <button class="btn-close" onclick="closeModal()" aria-label="Zamknij">&times;</button>
+      </div>
+      <div class="pricing-summary">
+        <div class="ps-row"><span>Produkt</span><span>Premium Analytics</span></div>
+        <div class="ps-row"><span>Rozliczenie</span><span>co miesiąc</span></div>
+        <div class="ps-row"><span>Start</span><span>Q3 2026</span></div>
+        <div class="ps-row"><span>Pierwsza opłata</span><span>po starcie usługi</span></div>
+        <div class="ps-row total"><span>Łącznie</span><strong>99 PLN / mies.</strong></div>
+      </div>
+      <form id="waitlist-form" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="email-input">Adres e-mail</label>
+          <input type="email" id="email-input" class="form-input"
+                 placeholder="jan.kowalski@moj-sklep.pl" autocomplete="email" required>
+          <div class="form-error" id="email-error"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            Dane karty <span class="opt">&mdash; opcjonalne, rezerwuje zniżkę 50%</span>
+          </label>
+          <div id="card-element"></div>
+          <div class="form-error" id="card-error"></div>
+          <div class="form-helper">
+            Tryb testowy &mdash; nie wprowadzaj prawdziwych danych karty.<br>
+            Środki nie będą pobierane przed startem usługi w Q3 2026.
+          </div>
+        </div>
+        <button type="submit" class="btn-primary" id="submit-btn">Zapisuję się na listę</button>
+        <p class="disclaimer">
+          Podając adres e-mail, wyraża Pani/Pan zgodę na kontakt w sprawie startu Premium Analytics.
+          Rezygnacja możliwa w dowolnym momencie. Dane przetwarzamy zgodnie z RODO.
+        </p>
+      </form>
+    </div>
+
+    <div id="success-screen">
+      <div class="success-mark">&#10003;</div>
+      <h2>Zapisano</h2>
+      <p>
+        Poinformujemy Panią/Pana o starcie Premium Analytics w Q3 2026.<br>
+        Potwierdzenie zostanie wysłane na podany adres e-mail.
+      </p>
+      <button class="btn-primary" onclick="closeModal()">Zamknij</button>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://js.stripe.com/v3/" defer></script>
+<script>
+// ── Config ────────────────────────────────────────────────────────
+const CFG = {
+  stripeKey:     'pk_test_REPLACE_WITH_YOUR_STRIPE_TEST_KEY',
+  airtableBase:  'REPLACE_WITH_YOUR_AIRTABLE_BASE_ID',
+  airtableTable: 'Waitlist',
+  airtablePAT:   'REPLACE_WITH_YOUR_AIRTABLE_PAT',
+};
+
+// ── Mock data ─────────────────────────────────────────────────────
+const MOCK = {
+  cichy: {
+    label: 'Cichy sprzedawca', category: 'Sukienki',
+    initials: 'CS',
+    bench: { own: 3.1, avg: 2.4 },
+    benchInsight: function(diff, pos) {
+      return pos
+        ? 'Twoja konwersja wyższa o ' + diff + ' pp od średniej — wynik w top 30% kategorii Sukienki.'
+        : 'Twoja konwersja niższa o ' + diff + ' pp od średniej — sprawdź ceny i zdjęcia produktowe.';
+    },
+    prices: { own: 199, list: [
+      { name: 'Sprzedawca A', price: 149, views: 2840, atc: 312 },
+      { name: 'Sprzedawca B', price: 159, views: 2210, atc: 248 },
+      { name: 'Sprzedawca C', price: 169, views: 1890, atc: 195 },
+      { name: 'Sprzedawca D', price: 174, views: 1640, atc: 171 },
+      { name: 'Sprzedawca E', price: 179, views: 1420, atc: 143 },
+      { name: 'Sprzedawca F', price: 184, views: 1180, atc: 109 },
+      { name: 'Sprzedawca G', price: 189, views:  940, atc:  87 },
+      { name: 'Sprzedawca H', price: 194, views:  710, atc:  62 },
+      { name: 'Sprzedawca I', price: 199, views:  580, atc:  48 },
+      { name: 'Sprzedawca J', price: 209, views:  390, atc:  31 },
+    ]},
+    demand: [
+      { q: 'Lniane sukienki',     d: +47 }, { q: 'Maxi sukienki',       d: +31 },
+      { q: 'Sukienki letnie',     d: +22 }, { q: 'Sukienki bawełniane', d: +18 },
+      { q: 'Sukienki w kwiaty',   d: +12 }, { q: 'Sukienki wizytowe',   d:  -8 },
+      { q: 'Sukienki midi',       d: -12 }, { q: 'Sukienki koktajlowe', d: -19 },
+    ],
+    demandInsight: 'Wzrost popytu na lniane (+47%) i maxi (+31%) — zwiększ ekspozycję tych produktów przed szczytem sezonu.',
+  },
+  negocjator: {
+    label: 'Negocjator', category: 'Streetwear',
+    initials: 'NE',
+    bench: { own: 2.8, avg: 3.5 },
+    benchInsight: function(diff, pos) {
+      return pos
+        ? 'Twoja konwersja wyższa o ' + diff + ' pp od średniej — wynik w top 30% kategorii Streetwear.'
+        : 'Twoja konwersja niższa o ' + diff + ' pp od średniej — sprawdź ceny i zdjęcia produktowe.';
+    },
+    prices: { own: 249, list: [
+      { name: 'Sprzedawca A', price: 189, views: 3120, atc: 341 },
+      { name: 'Sprzedawca B', price: 199, views: 2680, atc: 287 },
+      { name: 'Sprzedawca C', price: 209, views: 2240, atc: 232 },
+      { name: 'Sprzedawca D', price: 219, views: 1870, atc: 188 },
+      { name: 'Sprzedawca E', price: 229, views: 1530, atc: 149 },
+      { name: 'Sprzedawca F', price: 234, views: 1220, atc: 116 },
+      { name: 'Sprzedawca G', price: 239, views:  980, atc:  91 },
+      { name: 'Sprzedawca H', price: 244, views:  740, atc:  65 },
+      { name: 'Sprzedawca I', price: 249, views:  590, atc:  49 },
+      { name: 'Sprzedawca J', price: 269, views:  340, atc:  27 },
+    ]},
+    demand: [
+      { q: 'Oversized bluzy',      d: +63 }, { q: 'Cargo spodnie',        d: +41 },
+      { q: 'Streetwear kurtki',    d: +28 }, { q: 'Tie-dye koszulki',     d: +15 },
+      { q: 'Retro sneakersy',      d: +11 }, { q: 'Skinny jeansy',        d: -22 },
+      { q: 'Klasyczne polo',       d: -14 }, { q: 'Dresowe spodnie slim',  d: -31 },
+    ],
+    demandInsight: 'Oversized (+63%) i cargo (+41%) rosną najszybciej — rozważ zwiększenie stanów i widoczności tych SKU.',
+  },
+  nowy: {
+    label: 'Nowy sprzedawca', category: 'Buty damskie',
+    initials: 'NS',
+    bench: { own: 1.9, avg: 2.6 },
+    benchInsight: function(diff, pos) {
+      return pos
+        ? 'Twoja konwersja wyższa o ' + diff + ' pp od średniej — wynik w top 30% kategorii Buty damskie.'
+        : 'Twoja konwersja niższa o ' + diff + ' pp od średniej — sprawdź ceny i zdjęcia produktowe.';
+    },
+    prices: { own: 179, list: [
+      { name: 'Sprzedawca A', price:  99, views: 4210, atc: 487 },
+      { name: 'Sprzedawca B', price: 109, views: 3580, atc: 402 },
+      { name: 'Sprzedawca C', price: 119, views: 2940, atc: 318 },
+      { name: 'Sprzedawca D', price: 129, views: 2380, atc: 253 },
+      { name: 'Sprzedawca E', price: 139, views: 1920, atc: 197 },
+      { name: 'Sprzedawca F', price: 149, views: 1540, atc: 154 },
+      { name: 'Sprzedawca G', price: 159, views: 1160, atc: 112 },
+      { name: 'Sprzedawca H', price: 169, views:  870, atc:  79 },
+      { name: 'Sprzedawca I', price: 175, views:  620, atc:  53 },
+      { name: 'Sprzedawca J', price: 189, views:  380, atc:  29 },
+    ]},
+    demand: [
+      { q: 'Sandały damskie', d: +58 }, { q: 'Espadryle',       d: +44 },
+      { q: 'Klapki skórzane', d: +35 }, { q: 'Sneakersy białe', d: +19 },
+      { q: 'Baleriny',        d:  +8 }, { q: 'Botki damskie',   d: -17 },
+      { q: 'Kozaki',          d: -38 }, { q: 'Buty zimowe',     d: -51 },
+    ],
+    demandInsight: 'Sandały (+58%) i espadryle (+44%) dominują — odśwież asortyment letni, usuń zimowy z ekspozycji.',
+  },
+};
+
+const params = new URLSearchParams(window.location.search);
+const utmSeg = (params.get('utm_segment') || 'cichy').toLowerCase();
+const data   = MOCK[utmSeg] || MOCK['cichy'];
+
+// ── Render ────────────────────────────────────────────────────────
+function render() {
+  document.getElementById('account-initials').textContent = data.initials;
+  renderBenchmarks();
+  renderPrices();
+  renderDemand();
+}
+
+function renderBenchmarks() {
+  var b    = data.bench;
+  var diff = +(b.own - b.avg).toFixed(1);
+  var pos  = diff > 0;
+  document.getElementById('bench-heading').textContent = 'Konwersja sprzedaży — ' + data.category;
+  document.getElementById('bench-own-val').textContent = b.own.toFixed(1) + '%';
+  document.getElementById('bench-avg-val').textContent = b.avg.toFixed(1) + '%';
+  var deltaEl = document.getElementById('bench-own-delta');
+  deltaEl.textContent = (pos ? '+' : '') + diff + 'pp vs średnio';
+  deltaEl.className   = 'metric-delta ' + (pos ? 'up' : 'down');
+  var insightEl = document.getElementById('bench-insight');
+  insightEl.textContent = data.benchInsight(Math.abs(diff), pos);
+  insightEl.className   = 'insight-box ' + (pos ? 'positive' : 'negative');
+}
+
+function renderPrices() {
+  var p      = data.prices;
+  var sorted = p.list.slice().sort(function(a,b) { return a.price - b.price; });
+  document.getElementById('prices-heading').textContent = 'Top 10 ofert — ' + data.category;
+  document.getElementById('prices-desc').textContent    = 'Twoja cena: ' + p.own + ' PLN';
+  var rows = sorted.map(function(c, i) {
+    var delta = p.own - c.price;
+    var badge = delta > 0
+      ? '<span class="delta neg">−' + delta + ' PLN</span>'
+      : delta < 0 ? '<span class="delta pos">+' + Math.abs(delta) + ' PLN</span>'
+      : '<span class="delta neu">—</span>';
+    var locked = i >= 6 ? ' class="row-locked"' : '';
+    return '<tr' + locked + '><td>' + c.name + '</td><td><strong>' + c.price + ' PLN</strong></td><td class="col-views">' + c.views.toLocaleString('pl-PL') + '</td><td class="col-atc">' + c.atc + '</td><td>' + badge + '</td></tr>';
+  }).join('');
+  rows += '<tr class="row-own"><td>Twoje konto</td><td><strong>' + p.own + ' PLN</strong></td><td class="col-views">—</td><td class="col-atc">—</td><td><span class="delta neu">—</span></td></tr>';
+  document.getElementById('prices-tbody').innerHTML = rows;
+  var cheaperCnt = sorted.filter(function(c) { return c.price < p.own; }).length;
+  var insightEl  = document.getElementById('prices-insight');
+  if (cheaperCnt > 0) {
+    insightEl.textContent = 'Twoja cena ' + p.own + ' PLN jest wyższa o ' + (p.own - sorted[0].price) + ' PLN niż najtańsza oferta — ' + cheaperCnt + ' z 10 sprzedawców sprzedaje taniej.';
+    insightEl.className   = 'insight-box negative';
+  } else {
+    insightEl.textContent = 'Twoja cena ' + p.own + ' PLN jest jedną z niższych w top 10 kategorii.';
+    insightEl.className   = 'insight-box positive';
+  }
+}
+
+function renderDemand() {
+  document.getElementById('demand-heading').textContent = 'Trendy wyszukań — ' + data.category + ' (MoM)';
+  document.getElementById('demand-list').innerHTML = data.demand.map(function(d) {
+    var up = d.d > 0;
+    return '<div class="demand-item">' +
+      '<div><div class="demand-query">' + d.q + '</div><div class="demand-period">zmiana MoM</div></div>' +
+      '<div class="demand-change ' + (up ? 'up' : 'down') + '">' + (up ? '↑' : '↓') + ' ' + (up ? '+' : '') + d.d + '%</div>' +
+    '</div>';
+  }).join('');
+  var insightEl = document.getElementById('demand-insight');
+  insightEl.textContent = data.demandInsight;
+  insightEl.className   = 'insight-box positive';
+}
+
+// ── Section tab active on scroll ──────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  var tabs     = document.querySelectorAll('.stab');
+  var sections = document.querySelectorAll('.view-section');
+
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        tabs.forEach(function(t) { t.classList.remove('active'); });
+        var match = document.querySelector('.stab[data-section="' + entry.target.id + '"]');
+        if (match) match.classList.add('active');
+      }
+    });
+  }, {
+    rootMargin: '-' + (52 + 40) + 'px 0px -60% 0px',
+    threshold: 0,
+  });
+
+  sections.forEach(function(s) { observer.observe(s); });
+
+  render();
+});
+
+// ── Modal ─────────────────────────────────────────────────────────
+var stripe = null, cardEl = null;
+
+function initStripe() {
+  if (typeof Stripe === 'undefined') {
+    document.getElementById('card-element').innerHTML =
+      '<div class="form-helper" style="color:var(--down);">Stripe niedostępny — skonfiguruj klucz testowy w CFG.stripeKey.</div>';
+    return;
+  }
+  try {
+    stripe = Stripe(CFG.stripeKey);
+    var elements = stripe.elements();
+    cardEl = elements.create('card', { style: {
+      base: { fontSize: '15px', color: 'hsl(0,0%,13%)', fontFamily: 'Inter,-apple-system,sans-serif', '::placeholder': { color: 'hsl(0,0%,55%)' } },
+      invalid: { color: 'hsl(0,83%,46%)' },
+    }});
+    cardEl.mount('#card-element');
+    cardEl.on('change', function(e) {
+      document.getElementById('card-error').textContent = e.error ? e.error.message : '';
+    });
+  } catch(err) {
+    document.getElementById('card-element').innerHTML =
+      '<div class="form-helper" style="color:var(--down);">Błąd inicjalizacji Stripe: ' + err.message + '</div>';
+  }
+}
+
+function openModal() {
+  document.getElementById('modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  if (!stripe) {
+    if (typeof Stripe !== 'undefined') initStripe();
+    else window.addEventListener('load', function() { if (!stripe) initStripe(); }, { once: true });
+  }
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('modal')) closeModal();
+}
+
+// ── Form submit ───────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('waitlist-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var email    = document.getElementById('email-input').value.trim();
+    var emailErr = document.getElementById('email-error');
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      emailErr.textContent = 'Proszę podać poprawny adres e-mail.'; return;
+    }
+    emailErr.textContent = '';
+    var btn = document.getElementById('submit-btn');
+    btn.disabled = true; btn.textContent = 'Przetwarzanie…';
+    var cardToken = null;
+    if (stripe && cardEl) {
+      try {
+        var result = await stripe.createToken(cardEl);
+        if (result.error) {
+          document.getElementById('card-error').textContent = result.error.message;
+          btn.disabled = false; btn.textContent = 'Zapisuję się na listę'; return;
+        }
+        cardToken = result.token ? result.token.id : null;
+      } catch(_) {}
+    }
+    var payload = { utm: utmSeg, email: email, card_token: cardToken || '', ts: new Date().toISOString(), segment: data.label, category: data.category };
+    try { await captureToAirtable(payload); } catch(err) { console.warn('[FH Analytics] Airtable capture failed:', err); }
+    document.getElementById('form-screen').style.display = 'none';
+    var ss = document.getElementById('success-screen');
+    ss.classList.add('show'); ss.style.display = 'block';
+  });
+});
+
+async function captureToAirtable(payload) {
+  if (!CFG.airtableBase || CFG.airtableBase.startsWith('REPLACE')) return;
+  var res = await fetch('https://api.airtable.com/v0/' + CFG.airtableBase + '/' + encodeURIComponent(CFG.airtableTable), {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + CFG.airtablePAT, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fields: payload }),
+  });
+  if (!res.ok) throw new Error('Airtable HTTP ' + res.status);
+}
+</script>
+</body>
+</html>
