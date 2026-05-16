@@ -617,6 +617,14 @@
       .cta-price    { font-size: 19px; }
     }
   </style>
+  <!-- PostHog analytics -->
+  <script>
+    !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]);t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureFlagEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+    posthog.init('phc_mHHLhKCqNAhdBWfVm5TCPaD6rXbfzdG26EBh2pnyac5U', {
+      api_host: 'https://eu.i.posthog.com',
+      defaults: '2026-01-30',
+    });
+  </script>
 </head>
 <body>
 
@@ -701,7 +709,7 @@
             </div>
           </div>
           <div class="use-case-box">W marcu 3 sprzedawców w kategorii obniżyło ceny &mdash; czy dowiedział(a)by się Pani/Pan o tym w ciągu 24h?</div>
-          <button class="btn-primary" onclick="openModal()">Dołącz do waitlist &mdash; 99 PLN/m, start Q3 2026</button>
+          <button class="btn-primary" onclick="openModal('cta_mobile')">Dołącz do waitlist &mdash; 99 PLN/m, start Q3 2026</button>
           <div class="cta-price">99 PLN <span>/ miesiąc</span></div>
           <div class="cta-discount">Pierwszych 30 sprzedawców: stawka 49,50 PLN/m zamiast 99 PLN &mdash; przez 12 miesięcy. Karta opcjonalna; opłata dopiero od startu Q3 2026.</div>
           <div class="cta-avail">Start Q3 2026 &mdash; liczba miejsc ograniczona</div>
@@ -729,7 +737,7 @@
             <tbody id="prices-tbody"></tbody>
           </table>
           <div class="table-lock-overlay">
-            <button class="btn-unlock" onclick="openModal()">Odblokuj Premium &mdash; 99 PLN/m</button>
+            <button class="btn-unlock" onclick="unlockPremiumClicked()">Odblokuj Premium &mdash; 99 PLN/m</button>
           </div>
         </div>
 
@@ -776,7 +784,7 @@
           </div>
         </div>
         <div class="use-case-box">W marcu 3 sprzedawców w kategorii obniżyło ceny &mdash; czy dowiedział(a)by się Pani/Pan o tym w ciągu 24h?</div>
-        <button class="btn-primary" onclick="openModal()">Dołącz do waitlist &mdash; 99 PLN/m, start Q3 2026</button>
+        <button class="btn-primary" onclick="openModal('cta_sidebar')">Dołącz do waitlist &mdash; 99 PLN/m, start Q3 2026</button>
         <div class="cta-price">99 PLN <span>/ miesiąc</span></div>
         <div class="cta-discount">Pierwszych 30 sprzedawców: stawka 49,50 PLN/m zamiast 99 PLN &mdash; przez 12 miesięcy. Karta opcjonalna; opłata dopiero od startu Q3 2026.</div>
         <div class="cta-avail">Start Q3 2026 &mdash; liczba miejsc ograniczona</div>
@@ -1022,12 +1030,21 @@ document.addEventListener('DOMContentLoaded', function() {
   var tabs     = document.querySelectorAll('.stab');
   var sections = document.querySelectorAll('.view-section');
 
+  var viewedSections = {};
   var observer = new IntersectionObserver(function(entries) {
     entries.forEach(function(entry) {
       if (entry.isIntersecting) {
         tabs.forEach(function(t) { t.classList.remove('active'); });
         var match = document.querySelector('.stab[data-section="' + entry.target.id + '"]');
         if (match) match.classList.add('active');
+        if (!viewedSections[entry.target.id]) {
+          viewedSections[entry.target.id] = true;
+          posthog.capture('section_viewed', {
+            section_id: entry.target.id,
+            utm_segment: utmSeg,
+            category: data.category,
+          });
+        }
       }
     });
   }, {
@@ -1066,15 +1083,37 @@ function initStripe() {
   }
 }
 
-function openModal() {
+function openModal(source) {
   document.getElementById('modal').classList.add('open');
   document.body.style.overflow = 'hidden';
+  if (source !== 'unlock_table') {
+    posthog.capture('waitlist_cta_clicked', {
+      cta_location: source || 'unknown',
+      utm_segment: utmSeg,
+      category: data.category,
+    });
+  }
   if (!stripe) {
     if (typeof Stripe !== 'undefined') initStripe();
     else window.addEventListener('load', function() { if (!stripe) initStripe(); }, { once: true });
   }
 }
+function unlockPremiumClicked() {
+  posthog.capture('unlock_premium_clicked', {
+    utm_segment: utmSeg,
+    category: data.category,
+  });
+  openModal('unlock_table');
+}
+var _modalSubmitted = false;
 function closeModal() {
+  if (!_modalSubmitted) {
+    posthog.capture('waitlist_modal_closed', {
+      utm_segment: utmSeg,
+      category: data.category,
+    });
+  }
+  _modalSubmitted = false;
   document.getElementById('modal').classList.remove('open');
   document.body.style.overflow = '';
 }
@@ -1105,8 +1144,26 @@ document.addEventListener('DOMContentLoaded', function() {
         cardToken = result.token ? result.token.id : null;
       } catch(_) {}
     }
+    var hasCard = !!(cardToken);
+    posthog.capture('waitlist_form_submitted', {
+      has_card: hasCard,
+      utm_segment: utmSeg,
+      category: data.category,
+      segment_label: data.label,
+    });
     var payload = { utm: utmSeg, email: email, card_token: cardToken || '', ts: new Date().toISOString(), segment: data.label, category: data.category };
-    try { await captureToAirtable(payload); } catch(err) { console.warn('[FH Analytics] Airtable capture failed:', err); }
+    try { await captureToAirtable(payload); } catch(err) {
+      console.warn('[FH Analytics] Airtable capture failed:', err);
+      posthog.captureException(err);
+    }
+    posthog.identify(email);
+    posthog.capture('waitlist_signup_completed', {
+      has_card: hasCard,
+      utm_segment: utmSeg,
+      category: data.category,
+      segment_label: data.label,
+    });
+    _modalSubmitted = true;
     document.getElementById('form-screen').style.display = 'none';
     var ss = document.getElementById('success-screen');
     ss.classList.add('show'); ss.style.display = 'block';
